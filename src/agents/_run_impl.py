@@ -262,7 +262,9 @@ class RunImpl:
                 config=run_config,
             ),
         )
+        # STEVE: this is where you want to inject the hoisted_items from result.hoisted_items
         new_step_items.extend([result.run_item for result in function_results])
+
         new_step_items.extend(computer_results)
 
         # Next, run the MCP approval requests
@@ -588,6 +590,7 @@ class RunImpl:
 
         results = await asyncio.gather(*tasks)
 
+        # STEVE:  Change this to a for loop and call hoisted_items = hoister.generate_hoisted_items(tool_run, tool_output)
         return [
             FunctionToolResult(
                 tool=tool_run.function_tool,
