@@ -41,6 +41,7 @@ class FunctionToolResult:
     run_item: RunItem
     """The run item that was produced as a result of the tool call."""
 
+    # STEVE: this is where you want to add hoisted_items: list[RunItem] = []
 
 @dataclass
 class FunctionTool:
