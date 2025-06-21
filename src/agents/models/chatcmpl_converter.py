@@ -127,6 +127,7 @@ class Converter:
 
         keys = item.keys()
         # EasyInputMessageParam only has these two keys
+        # ALFRED+STEVE: this is the cluge method. 
         if keys != {"content", "role"}:
             return None
 

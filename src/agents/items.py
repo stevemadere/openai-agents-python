@@ -5,6 +5,7 @@ import copy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, Union
 
+from .hoister import HoistedFunctionCallOutputArtifact
 from openai.types.responses import (
     Response,
     ResponseComputerToolCall,
@@ -26,7 +27,6 @@ from openai.types.responses.response_input_item_param import (
     FunctionCallOutput,
     LocalShellCallOutput,
     McpApprovalResponse,
-    HoistedFunctionCallOutputArtifact
 )
 from openai.types.responses.response_output_item import (
     ImageGenerationCall,
@@ -57,7 +57,7 @@ TResponseOutputItem = ResponseOutputItem
 TResponseStreamEvent = ResponseStreamEvent
 """A type alias for the ResponseStreamEvent type from the OpenAI SDK."""
 
-T = TypeVar("T", bound=Union[TResponseOutputItem, TResponseInputItem])
+T = TypeVar("T", bound=Union[TResponseOutputItem, TResponseInputItem, HoistedFunctionCallOutputArtifact])
 
 
 @dataclass
