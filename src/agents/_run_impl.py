@@ -262,8 +262,10 @@ class RunImpl:
                 config=run_config,
             ),
         )
-        # STEVE: this is where you want to inject the hoisted_items from result.hoisted_items
-        new_step_items.extend([result.run_item for result in function_results])
+
+        for result in function_results:
+            new_step_items.append(result.run_item)
+            new_step_items.extend(result.hoisted_artifact_items)
 
         new_step_items.extend(computer_results)
 
@@ -590,19 +592,18 @@ class RunImpl:
 
         results = await asyncio.gather(*tasks)
 
-        # STEVE:  Change this to a for loop and call hoisted_items = hoister.generate_hoisted_items(tool_run, tool_output)
-        return [
-            FunctionToolResult(
-                tool=tool_run.function_tool,
-                output=result,
-                run_item=ToolCallOutputItem(
-                    output=result,
-                    raw_item=ItemHelpers.tool_call_output_item(tool_run.tool_call, str(result)),
-                    agent=agent,
-                ),
-            )
-            for tool_run, result in zip(tool_runs, results)
-        ]
+        function_tool_results:list[FunctionToolResult] = []
+        for tool_run, tool_result in zip(tool_runs, results):
+            raw_item =ItemHelpers.tool_call_output_item(tool_run.tool_call, str(tool_result))
+            run_item = ToolCallOutputItem( output=tool_result, raw_item=raw_item, agent=agent,)
+            # STEVE:  Change this to call hoister.generate_hoisted_items(tool_run, tool_result)
+            hoisted_items:list[RunItem] = []
+            ftr = FunctionToolResult(tool=tool_run.function_tool,
+                                     output=tool_result,
+                                     run_item=run_item,
+                                     hoisted_artifact_items=hoisted_items)
+            function_tool_results.append(ftr)
+        return function_tool_results
 
     @classmethod
     async def execute_local_shell_calls(

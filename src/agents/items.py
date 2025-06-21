@@ -26,6 +26,7 @@ from openai.types.responses.response_input_item_param import (
     FunctionCallOutput,
     LocalShellCallOutput,
     McpApprovalResponse,
+    HoistedFunctionCallOutputArtifact
 )
 from openai.types.responses.response_output_item import (
     ImageGenerationCall,
@@ -156,6 +157,20 @@ class ToolCallOutputItem(
     """
 
     type: Literal["tool_call_output_item"] = "tool_call_output_item"
+
+@dataclass
+class HoistedArtifactItem(RunItemBase[HoistedFunctionCallOutputArtifact]):
+    """Represents an artifact (e.g. image) hoisted from the output of a tool call."""
+
+    raw_item: HoistedFunctionCallOutputArtifact
+    """The raw item from the model."""
+
+    output: Any
+    """The output of the tool call. This is whatever the tool call returned; the `raw_item`
+    contains a string representation of the output.
+    """
+
+    type: Literal["hoisted_artifact_item"] = "hoisted_artifact_item"
 
 
 @dataclass

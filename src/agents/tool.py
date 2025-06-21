@@ -52,7 +52,8 @@ class FunctionToolResult:
     run_item: RunItem
     """The run item that was produced as a result of the tool call."""
 
-    # STEVE: this is where you want to add hoisted_items: list[RunItem] = []
+    hoisted_artifact_items: list[RunItem] = []
+    """A list of image references extracted from tool output and promoted to top-level image items"""
 
 @dataclass
 class FunctionTool:
