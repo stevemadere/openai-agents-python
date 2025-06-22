@@ -247,7 +247,8 @@ class RunImpl:
 
         for result in function_results:
             new_step_items.append(result.run_item)
-            new_step_items.extend(result.hoisted_artifact_items)
+            if result.hoisted_artifact_items:
+                new_step_items.extend(result.hoisted_artifact_items)
 
         new_step_items.extend(computer_results)
 
@@ -578,7 +579,6 @@ class RunImpl:
         for tool_run, tool_result in zip(tool_runs, results):
             raw_item =ItemHelpers.tool_call_output_item(tool_run.tool_call, str(tool_result))
             run_item = ToolCallOutputItem( output=tool_result, raw_item=raw_item, agent=agent,)
-            # STEVE:  Change this to call hoister.generate_hoisted_items(tool_run, tool_result)
             hoisted_items:list[HoistedArtifactItem] = Hoister.generate_hoisted_items(agent, tool_run, str(tool_result))
             ftr = FunctionToolResult(tool=tool_run.function_tool,
                                      output=tool_result,

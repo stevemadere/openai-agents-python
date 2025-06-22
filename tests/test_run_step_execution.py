@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from agents.items import ImageContentPart, TextContentPart
 import json
-from typing import Any
+from typing import Any, cast
 
+from openai.types.responses import ResponseFunctionToolCall
+from openai.types.responses.response_input_item import FunctionCallOutput
 import pytest
 from pydantic import BaseModel
 
@@ -18,6 +21,7 @@ from agents import (
     ToolCallOutputItem,
     TResponseInputItem,
     Usage,
+    result,
 )
 from agents._run_impl import (
     NextStepFinalOutput,
@@ -26,6 +30,7 @@ from agents._run_impl import (
     RunImpl,
     SingleStepResult,
 )
+from agents.items import HoistedArtifactItem, ImageContentPart, TextContentPart
 from agents.run import AgentRunner
 from agents.tool import function_tool
 from agents.tool_context import ToolContext
@@ -159,6 +164,57 @@ async def test_multiple_tool_calls():
     assert_item_is_function_tool_call(items[2], "test_2", None)
 
     assert isinstance(result.next_step, NextStepRunAgain)
+
+@pytest.mark.asyncio
+async def test_tool_call_returns_image():
+    image_url: str = "https://example.com/image.jpg"
+    tool = get_function_tool(name="image_tool", return_value=f"Here's an image: {image_url}")
+    agent = Agent(name="test", tools=[tool])
+    response = ModelResponse(
+        output=[
+            get_text_message("I'll show you an image"),
+            get_function_tool_call("image_tool"),
+        ],
+        usage=Usage(),
+        response_id=None,
+    )
+    original_input = "hello chatbot"
+    result = await get_execute_result(agent, response, original_input=original_input)
+    assert result.original_input == original_input
+
+    assert len(result.generated_items) == 4, "Should have message, tool call, tool output, and one hoisted item"
+    assert isinstance(result.next_step, NextStepRunAgain)
+    
+    hoisted_items = [item for item in result.generated_items if isinstance(item, HoistedArtifactItem)]
+    
+
+    function_call_output = next((item.raw_item for item in result.generated_items 
+                            if isinstance(item, ToolCallOutputItem)), None)
+    assert function_call_output
+    
+    assert "call_id" in function_call_output, "Tool call output should have a call_id"
+
+    tool_call_id= function_call_output["call_id"]
+    
+    assert len(hoisted_items) == 1, "Should have 1 hoisted artifact item"
+    
+    for item in hoisted_items:
+        assert item.raw_item["role"] == "user"
+
+        content = item.raw_item["content"]
+
+        assert len(content) == 2, "Should have two content parts (text and image)"
+
+        image_part: ImageContentPart | None = cast(ImageContentPart, next((part for part in content if part.get("type") == "input_image"), None))
+        text_part: TextContentPart | None = cast(TextContentPart, next((part for part in content if part.get("type") == "input_text"), None))
+
+        assert image_part
+        assert text_part
+
+        assert image_part["image_url"] == image_url
+        assert tool_call_id in text_part["text"]
+        
+        assert tool_call_id == item.raw_item["tool_call_id"], "Incorrect tool call id"
 
 
 @pytest.mark.asyncio

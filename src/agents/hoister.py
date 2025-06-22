@@ -10,8 +10,6 @@ from agents.agent import Agent
 from agents.items import HoistedArtifactItem, HoistedFunctionCallOutputArtifact, ImageContentPart, TextContentPart
 from agents.tool import ToolRunFunction
 
-#TODO: ToolRunFunction, is already defined in agents._run_impl but it causes a circular import. We should really extract this type and those like it to another file, but i'm trying to make minimum modifications right now.
-
 __all__ = ["Hoister"]
 
 class Hoister:
