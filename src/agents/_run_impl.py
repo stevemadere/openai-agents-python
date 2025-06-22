@@ -38,6 +38,9 @@ from openai.types.responses.response_output_item import (
 )
 from openai.types.responses.response_reasoning_item import ResponseReasoningItem
 
+from agents.hoister import Hoister
+
+
 from .agent import Agent, ToolsToFinalOutputResult
 from .agent_output import AgentOutputSchemaBase
 from .computer import AsyncComputer, Computer
@@ -47,6 +50,7 @@ from .handoffs import Handoff, HandoffInputData
 from .items import (
     HandoffCallItem,
     HandoffOutputItem,
+    HoistedArtifactItem,
     ItemHelpers,
     MCPApprovalRequestItem,
     MCPApprovalResponseItem,
@@ -74,6 +78,11 @@ from .tool import (
     LocalShellTool,
     MCPToolApprovalRequest,
     Tool,
+    ToolRunComputerAction,
+    ToolRunFunction,
+    ToolRunHandoff,
+    ToolRunLocalShellCall,
+    ToolRunMCPApprovalRequest,
 )
 from .tool_context import ToolContext
 from .tracing import (
@@ -117,34 +126,7 @@ class AgentToolUseTracker:
         return existing_data is not None and len(existing_data[1]) > 0
 
 
-@dataclass
-class ToolRunHandoff:
-    handoff: Handoff
-    tool_call: ResponseFunctionToolCall
 
-
-@dataclass
-class ToolRunFunction:
-    tool_call: ResponseFunctionToolCall
-    function_tool: FunctionTool
-
-
-@dataclass
-class ToolRunComputerAction:
-    tool_call: ResponseComputerToolCall
-    computer_tool: ComputerTool
-
-
-@dataclass
-class ToolRunMCPApprovalRequest:
-    request_item: McpApprovalRequest
-    mcp_tool: HostedMCPTool
-
-
-@dataclass
-class ToolRunLocalShellCall:
-    tool_call: LocalShellCall
-    local_shell_tool: LocalShellTool
 
 
 @dataclass
@@ -597,7 +579,7 @@ class RunImpl:
             raw_item =ItemHelpers.tool_call_output_item(tool_run.tool_call, str(tool_result))
             run_item = ToolCallOutputItem( output=tool_result, raw_item=raw_item, agent=agent,)
             # STEVE:  Change this to call hoister.generate_hoisted_items(tool_run, tool_result)
-            hoisted_items:list[RunItem] = []
+            hoisted_items:list[HoistedArtifactItem] = Hoister.generate_hoisted_items(agent, tool_run, str(tool_result))
             ftr = FunctionToolResult(tool=tool_run.function_tool,
                                      output=tool_result,
                                      run_item=run_item,

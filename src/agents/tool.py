@@ -4,8 +4,9 @@ import inspect
 import json
 from collections.abc import Awaitable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Literal, Union, overload
+from typing import TYPE_CHECKING, Any, Callable, Literal, Optional, Union, overload
 
+from openai.types.responses import ResponseComputerToolCall, ResponseFunctionToolCall
 from openai.types.responses.file_search_tool_param import Filters, RankingOptions
 from openai.types.responses.response_output_item import LocalShellCall, McpApprovalRequest
 from openai.types.responses.tool_param import CodeInterpreter, ImageGeneration, Mcp
@@ -13,11 +14,13 @@ from openai.types.responses.web_search_tool_param import UserLocation
 from pydantic import ValidationError
 from typing_extensions import Concatenate, NotRequired, ParamSpec, TypedDict
 
+from agents.handoffs import Handoff
+
 from . import _debug
 from .computer import AsyncComputer, Computer
 from .exceptions import ModelBehaviorError
 from .function_schema import DocstringStyle, function_schema
-from .items import RunItem
+from .items import HoistedArtifactItem, RunItem
 from .logger import logger
 from .run_context import RunContextWrapper
 from .tool_context import ToolContext
@@ -52,7 +55,7 @@ class FunctionToolResult:
     run_item: RunItem
     """The run item that was produced as a result of the tool call."""
 
-    hoisted_artifact_items: list[RunItem] = []
+    hoisted_artifact_items: list[HoistedArtifactItem] | None = None
     """A list of image references extracted from tool output and promoted to top-level image items"""
 
 @dataclass
@@ -90,6 +93,34 @@ class FunctionTool:
     and returns whether the tool is enabled. You can use this to dynamically enable/disable a tool
     based on your context/state."""
 
+@dataclass
+class ToolRunHandoff:
+    handoff: Handoff
+    tool_call: ResponseFunctionToolCall
+
+
+@dataclass
+class ToolRunFunction:
+    tool_call: ResponseFunctionToolCall
+    function_tool: FunctionTool
+
+
+@dataclass
+class ToolRunComputerAction:
+    tool_call: ResponseComputerToolCall
+    computer_tool: ComputerTool
+
+
+@dataclass
+class ToolRunMCPApprovalRequest:
+    request_item: McpApprovalRequest
+    mcp_tool: HostedMCPTool
+
+
+@dataclass
+class ToolRunLocalShellCall:
+    tool_call: LocalShellCall
+    local_shell_tool: LocalShellTool
 
 @dataclass
 class FileSearchTool:
