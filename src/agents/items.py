@@ -68,8 +68,7 @@ class ImageContentPart(TypedDict):
 class HoistedFunctionCallOutputArtifact(TypedDict):
     role: Literal["user"]
     content: list[TextContentPart | ImageContentPart]
-    # Reference to the original tool call id
-    tool_call_id: str
+    
 
 T = TypeVar("T", bound=Union[TResponseOutputItem, TResponseInputItem, HoistedFunctionCallOutputArtifact])
 

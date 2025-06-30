@@ -194,8 +194,6 @@ async def test_tool_call_returns_image():
     
     assert "call_id" in function_call_output, "Tool call output should have a call_id"
 
-    tool_call_id= function_call_output["call_id"]
-    
     assert len(hoisted_items) == 1, "Should have 1 hoisted artifact item"
     
     for item in hoisted_items:
@@ -212,10 +210,6 @@ async def test_tool_call_returns_image():
         assert text_part
 
         assert image_part["image_url"] == image_url
-        assert tool_call_id in text_part["text"]
-        
-        assert tool_call_id == item.raw_item["tool_call_id"], "Incorrect tool call id"
-
 
 @pytest.mark.asyncio
 async def test_multiple_tool_calls_with_tool_context():

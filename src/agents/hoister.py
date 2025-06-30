@@ -21,11 +21,12 @@ class Hoister:
     IMAGE_URL_PATTERN: Final[str] = r'(https?://[^\s]+\.(jpg|jpeg|png|gif|bmp|webp|svg))'
 
     @classmethod 
-    def generate_artifact_text_part(cls, tool_run: ToolRunFunction) -> TextContentPart:
+    def generate_artifact_text_part(cls, tool_run: ToolRunFunction, image_url: str) -> TextContentPart:
         #We can expand this to have more information about the tool call
         return TextContentPart(
             type="input_text",
-            text=f"Image from tool call {tool_run.tool_call.call_id}"
+            text=f"""Hoisted image from tool call {tool_run.tool_call.call_id}.
+             This image corresponds to the following url referenced in the tool call result: {image_url}""",
         )
     @classmethod
     def create_hoisted_artifact_item(cls, agent: Agent[Any], tool_run: ToolRunFunction, image_url: str) -> HoistedArtifactItem:
@@ -33,13 +34,12 @@ class Hoister:
         artifact = HoistedFunctionCallOutputArtifact(
                 role="user",
                 content=[
-                    cls.generate_artifact_text_part(tool_run ),
+                    cls.generate_artifact_text_part(tool_run, image_url),
                     ImageContentPart(
                         type="input_image",
                         image_url=image_url
                     )
                 ],
-                tool_call_id=tool_run.tool_call.call_id
             )
             
             # Create the hoisted artifact item

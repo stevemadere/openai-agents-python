@@ -43,10 +43,6 @@ class TestHoister(unittest.TestCase):
         for item in hoisted_items:
             self.assertIsInstance(item, HoistedArtifactItem)
             
-        # 3. Check that each hoisted item has the correct tool_call_id
-        for item in hoisted_items:
-            self.assertEqual(item.raw_item["tool_call_id"], "test_tool_call_id")
-            
         # 4. Check that each hoisted item has a text part that mentions the tool ID
         for item in hoisted_items:
             # Get the content parts
